@@ -38,8 +38,8 @@ export default async function CaseDetail({ params }: { params: { id: string } })
                     <div className="flex items-center gap-3 mb-2">
                         <h1 className="text-3xl font-bold tracking-tight">{c.title}</h1>
                         <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium border ${c.status === 'SOLVED' ? 'border-green-500/20 bg-green-500/10 text-green-400' :
-                                c.status === 'ANALYZING' ? 'border-blue-500/20 bg-blue-500/10 text-blue-400' :
-                                    'border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
+                            c.status === 'ANALYZING' ? 'border-blue-500/20 bg-blue-500/10 text-blue-400' :
+                                'border-yellow-500/20 bg-yellow-500/10 text-yellow-400'
                             }`}>
                             {c.status}
                         </span>
