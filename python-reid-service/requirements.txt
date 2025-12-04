@@ -1,0 +1,25 @@
+# FastAPI and server
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# PyTorch and vision
+torch>=2.6.0
+torchvision>=0.21.0
+
+# Person Re-ID
+torchreid>=0.2.5
+
+# Object Detection
+ultralytics>=8.0.196
+
+# Image and video processing
+opencv-python>=4.8.1
+Pillow>=10.3.0
+
+# ML utilities - UPDATED for Python 3.13
+scikit-learn>=1.5.0
+numpy>=1.26.0
+
+# Progress bars
+tqdm>=4.66.1
