@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import bcrypt from "bcryptjs"
 
 const handler = NextAuth({
     providers: [
@@ -18,15 +19,7 @@ const handler = NextAuth({
                 })
 
                 if (!user) {
-                    // Create user if not exists (Auto-signup for demo)
-                    const newUser = await prisma.user.create({
-                        data: {
-                            email: credentials.email,
-                            password: credentials.password, // In prod, hash this!
-                            role: (credentials.email.includes("admin") || credentials.email === "pratik@gmail.com") ? "ADMIN" : "USER"
-                        }
-                    })
-                    return { id: newUser.id, email: newUser.email, role: newUser.role }
+                    return null
                 }
 
                 // Force upgrade to ADMIN if it's the specific email
@@ -38,8 +31,31 @@ const handler = NextAuth({
                     user.role = "ADMIN";
                 }
 
-                if (user.password === credentials.password) {
+                // Check password
+                // For legacy plain text passwords (optional backward compatibility if needed, 
+                // but for this task we assume migration to hashed)
+                // We will try bcrypt compare first.
+
+                const isValid = await bcrypt.compare(credentials.password, user.password);
+
+                if (isValid) {
                     return { id: user.id, email: user.email, role: user.role }
+                }
+
+                // Fallback for existing plain text passwords (TEMPORARY/OPTIONAL)
+                // If bcrypt fails, check if it matches plain text (only if not a hash)
+                // A bcrypt hash starts with $2a$ or $2b$ or $2y$ and is 60 chars.
+                // If current password is not a hash, compare directly.
+                if (!user.password.startsWith("$2")) {
+                    if (user.password === credentials.password) {
+                        // Optionally migrate to hash here
+                        const hashedPassword = await bcrypt.hash(credentials.password, 10);
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { password: hashedPassword }
+                        });
+                        return { id: user.id, email: user.email, role: user.role }
+                    }
                 }
 
                 return null
