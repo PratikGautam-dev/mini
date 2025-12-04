@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   @default("password") // Simple auth for demo
+  role      String   @default("USER") // "USER" or "ADMIN"
+  cases     Case[]
+  createdAt DateTime @default(now())
+}
+
+model Case {
+  id                String   @id @default(cuid())
+  title             String
+  description       String?
+  missingPersonName String
+  status            String   @default("PENDING") // PENDING, ANALYZING, SOLVED
+  
+  // File paths
+  refImage          String   // Path to uploaded reference image
+  video             String   // Path to uploaded video footage
+  
+  createdAt         DateTime @default(now())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  
+  analysis          AnalysisResult?
+}
+
+model AnalysisResult {
+  id        String   @id @default(cuid())
+  caseId    String   @unique
+  case      Case     @relation(fields: [caseId], references: [id])
+  rawResult String   // JSON string of the AI output
+  topMatch  Float?   // Confidence of top match
+  createdAt DateTime @default(now())
+}
