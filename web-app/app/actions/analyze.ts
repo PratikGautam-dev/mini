@@ -9,6 +9,7 @@ export async function analyzeCase(caseId: string) {
     try {
         const c = await prisma.case.findUnique({
             where: { id: caseId },
+            include: { user: true },
         });
 
         if (!c) throw new Error("Case not found");
@@ -63,8 +64,19 @@ export async function analyzeCase(caseId: string) {
         // Update Case Status
         await prisma.case.update({
             where: { id: caseId },
-            data: { status: result.matches && result.matches.length > 0 ? "SOLVED" : "ANALYZING" }, // "SOLVED" if matches found? Or just keep ANALYZING? Let's say SOLVED if > 0 matches for now.
+            data: { status: result.matches && result.matches.length > 0 ? "SOLVED" : "ANALYZING" },
         });
+
+        // Send Email Notification
+        if (c.user && c.user.email) {
+            try {
+                const { sendAnalysisCompletionEmail } = await import("@/lib/mail");
+                await sendAnalysisCompletionEmail(c.user.email, c.title, c.id, result);
+            } catch (emailError) {
+                console.error("Failed to send email notification:", emailError);
+                // Don't fail the request if email fails
+            }
+        }
 
         revalidatePath(`/admin/cases/${caseId}`);
         return { success: true };
